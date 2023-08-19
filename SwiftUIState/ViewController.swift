@@ -14,9 +14,11 @@ class ViewController: UIViewController {
   
   @IBOutlet weak var countLabel: UILabel!
   
-  var timer: Timer?
   
   
+  //タイマー作成
+  var timer:  DispatchSourceTimer?
+      
   override func viewDidLoad() {
     super.viewDidLoad()
     // Do any additional setup after loading the view.
@@ -39,6 +41,7 @@ class ViewController: UIViewController {
     
     // ViewModelのcountプロパティを監視して更新を受け取る
     viewModel.$count
+      .receive(on: DispatchQueue.main)
       .sink { [weak countLabel] newValue in
         print("count: \(newValue)")
         
@@ -47,20 +50,24 @@ class ViewController: UIViewController {
       .store(in: &cancellables)
     
 
-    
-    // タイマーをセットアップし、1秒ごとに `updateTimer` メソッドを呼び出す
-    timer = Timer.scheduledTimer(timeInterval: 0.05, target: self, selector: #selector(updateTimer), userInfo: nil, repeats: true)
-    
+  
+    self.timer = DispatchSource.makeTimerSource(queue: DispatchQueue.global())
+    if let timer = self.timer {
+      timer.schedule(deadline: DispatchTime.now(), repeating: 1.0)
+      timer.setEventHandler {
+        print("timer fired! count \(self.viewModel.count )")
+        DispatchQueue.main.async {
+          self.viewModel.count += 100
+        }
+      }
+      timer.resume()
+    }
   }
 
-  @objc func updateTimer() {
-    viewModel.count += 1
-    
-  }
 
   
   override func viewWillDisappear(_ animated: Bool) {
-    timer?.invalidate()
+    timer?.cancel()
     timer = nil
   }
 
