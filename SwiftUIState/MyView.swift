@@ -9,8 +9,15 @@ struct MyView: View {
 
     var body: some View {
       VStack{
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
         Text("count=\(viewModel.count)")
+        ScrollView {
+          LazyVStack(alignment: .leading){
+          
+                ForEach(0...viewModel.count, id: \.self) {
+                    Text("Row \($0)")
+                }
+            }
+        }
         Button(action: {
           self.viewModel.count += 1
         }) {
